@@ -1,0 +1,22 @@
+name: binding-affinity
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - rdkit
+  - jupyter
+  - pandas
+  - numpy
+  - scikit-learn
+  - matplotlib
+  - seaborn
+  - pip
+  - pip:
+    - chembl_webresource_client
+    - xgboost
+    - shap
+    - streamlit
+    - plotly
+    - joblib
+    - pillow
