@@ -92,11 +92,11 @@ binding-affinity-predictor/
 - Compares contribution of physicochemical descriptors vs. fingerprint bits
 
 ### Step 5: Virtual Screening (`05_virtual_screening.ipynb`)
-- Screens 40 drug-like molecules with kinase inhibitor-like scaffolds
-- Computes features and predicts binding affinity using the best model
-- Filters by Lipinski Rule of 5 (MW ≤ 500, LogP ≤ 5, HBA ≤ 10, HBD ≤ 5)
-- Ranks candidates by predicted pChEMBL value
-- Visualizes top candidates with RDKit 2D structure rendering
+- Queries ChEMBL for **3,064 approved small molecule drugs** (max_phase=4), excluding compounds in the EGFR training set
+- Computes 2,060-dim features and predicts binding affinity using the best XGBoost model
+- Filters by Lipinski Rule of 5 → **2,620 drug-like candidates** (85.5%)
+- Identifies **16 strong predicted binders** (pChEMBL ≥ 7), including Sotorasib, Hydralazine, and known kinase inhibitors
+- Visualizes predicted affinity distribution and top 10 candidate structures
 
 ### Step 6: Streamlit Dashboard (`app/streamlit_app.py`)
 - Input any SMILES string and get an instant prediction
