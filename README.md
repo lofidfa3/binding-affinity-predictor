@@ -14,6 +14,19 @@ Trained on **10,413 unique compounds** with pChEMBL values (standardized -log₁
 
 **Best model: XGBoost** with R² = 0.736 on the held-out test set.
 
+### Generalization Assessment (Notebook 03b)
+
+The random split above can inflate performance due to analog bias. We evaluated the XGBoost model under rigorous splitting strategies:
+
+| Split | Train Size | Test Size | R² | RMSE | Pearson r |
+|-------|-----------|----------|-----|------|-----------|
+| Random | 8,330 | 2,083 | 0.736 | 0.669 | 0.858 |
+| Scaffold | 8,333 | 2,080 | 0.466 | 0.909 | 0.696 |
+| Temporal (post-2020) | 7,564 | 2,810 | -0.768 | 1.562 | 0.027 |
+
+- **Scaffold split** groups compounds by Murcko scaffold, preventing structural leakage. The R² drop (0.736 → 0.466) confirms analog bias in the random split.
+- **Temporal split** trains on pre-2020 data and tests on post-2020 compounds. The negative R² reflects a severe covariate shift from a large 2021 screening batch (1,497 compounds).
+
 ## Project Structure
 
 ```
@@ -24,6 +37,7 @@ binding-affinity-predictor/
 │   ├── 01_data_collection.ipynb           # ChEMBL data query & cleaning
 │   ├── 02_molecular_features.ipynb        # RDKit descriptors & Morgan fingerprints
 │   ├── 03_model_training.ipynb            # RF, XGBoost, SVR training & comparison
+│   ├── 03b_scaffold_temporal_split.ipynb  # Scaffold & temporal split evaluation
 │   ├── 04_model_interpretation.ipynb      # SHAP analysis & feature importance
 │   └── 05_virtual_screening.ipynb         # Score & rank novel compounds
 ├── app/
@@ -60,6 +74,14 @@ binding-affinity-predictor/
 - Generates predicted vs. actual scatter plots
 - **Output:** Saved models (`.pkl`), scaler, and metadata
 
+### Step 3b: Scaffold & Temporal Split Evaluation (`03b_scaffold_temporal_split.ipynb`)
+- Loads the trained XGBoost model (same hyperparameters, no new search) and refits on each split's training set
+- **Murcko scaffold split:** Groups compounds by Bemis–Murcko generic scaffold; assigns least-frequent scaffolds to test set (~20%); zero scaffold overlap between train/test
+- **Temporal split:** Fetches `document_year` from ChEMBL; trains on compounds published ≤2020, tests on post-2020
+- Produces a 3-panel predicted vs. actual scatter plot and a UMAP chemical space visualization
+- Includes a ready-to-copy results paragraph for manuscript use
+- **Output:** `models/split_comparison.png`, `models/chemical_space_splits.png`, `models/split_comparison.csv`
+
 ### Step 4: Model Interpretation (`04_model_interpretation.ipynb`)
 - Feature importance bar plots for Random Forest and XGBoost
 - SHAP (SHapley Additive exPlanations) analysis:
@@ -84,6 +106,7 @@ binding-affinity-predictor/
   - Color-coded binding strength (strong/moderate/weak)
   - Lipinski Rule of 5 compliance check
   - Full molecular property table
+  - Generalization assessment (scaffold & temporal R²) in sidebar
 - Includes example molecules (Erlotinib, Gefitinib, Lapatinib)
 
 ## Getting Started
@@ -111,6 +134,7 @@ Run the notebooks sequentially (each depends on the previous):
 jupyter nbconvert --to notebook --execute notebooks/01_data_collection.ipynb --output 01_data_collection.ipynb
 jupyter nbconvert --to notebook --execute notebooks/02_molecular_features.ipynb --output 02_molecular_features.ipynb
 jupyter nbconvert --to notebook --execute notebooks/03_model_training.ipynb --output 03_model_training.ipynb --ExecutePreprocessor.timeout=1200
+jupyter nbconvert --to notebook --execute notebooks/03b_scaffold_temporal_split.ipynb --output 03b_scaffold_temporal_split.ipynb --ExecutePreprocessor.timeout=600
 jupyter nbconvert --to notebook --execute notebooks/04_model_interpretation.ipynb --output 04_model_interpretation.ipynb
 jupyter nbconvert --to notebook --execute notebooks/05_virtual_screening.ipynb --output 05_virtual_screening.ipynb
 ```
@@ -138,6 +162,7 @@ streamlit run app/streamlit_app.py
 | `scikit-learn` | Random Forest, SVR, preprocessing |
 | `xgboost` | Gradient boosting regression |
 | `shap` | Model interpretation |
+| `umap-learn` | Chemical space visualization |
 | `streamlit` | Interactive web dashboard |
 | `matplotlib` / `seaborn` | Visualization |
 

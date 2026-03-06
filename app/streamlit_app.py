@@ -9,6 +9,7 @@ Usage:
     streamlit run app/streamlit_app.py
 """
 
+import os
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -111,6 +112,21 @@ if model_loaded:
     st.sidebar.write(f"**Test RMSE:** {metadata['best_rmse']:.4f}")
     st.sidebar.write(f"**Training samples:** {metadata['n_train']}")
     st.sidebar.write(f"**Target:** EGFR (CHEMBL203)")
+
+    # Split comparison (from notebook 03b)
+    split_csv = "models/split_comparison.csv"
+    if os.path.exists(split_csv):
+        st.sidebar.header("Generalization Assessment")
+        split_df = pd.read_csv(split_csv)
+        for _, row in split_df.iterrows():
+            label = row["Split"].replace(" (existing)", "").replace(" (new)", "")
+            r2 = row["R²"]
+            rmse = row["RMSE"]
+            st.sidebar.write(f"**{label}:** R²={r2:.3f}, RMSE={rmse:.3f}")
+        st.sidebar.caption(
+            "Scaffold and temporal splits remove analog bias. "
+            "See notebook 03b for details."
+        )
 
     # Example molecules
     st.sidebar.header("Example SMILES")
